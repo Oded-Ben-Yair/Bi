@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Menu, Sparkles, Settings, HelpCircle } from 'lucide-react';
 
 interface HeaderProps {
@@ -7,7 +6,7 @@ interface HeaderProps {
   isConnected: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick, isConnected }) => {
+const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   return (
     <header className="h-16 border-b border-copilot-border bg-copilot-dark/80 backdrop-blur-lg">
       <div className="h-full px-4 flex items-center justify-between">

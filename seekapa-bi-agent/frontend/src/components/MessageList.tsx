@@ -70,8 +70,9 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          code({ node, inline, className, children, ...props }) {
+                          code({ className, children }: any) {
                             const match = /language-(\w+)/.exec(className || '');
+                            const inline = !className || !match;
                             return !inline && match ? (
                               <div className="relative group">
                                 <button
@@ -87,16 +88,15 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
                                   )}
                                 </button>
                                 <SyntaxHighlighter
-                                  style={oneDark}
+                                  style={oneDark as any}
                                   language={match[1]}
                                   PreTag="div"
-                                  {...props}
                                 >
                                   {String(children).replace(/\n$/, '')}
                                 </SyntaxHighlighter>
                               </div>
                             ) : (
-                              <code className={className} {...props}>
+                              <code className={className}>
                                 {children}
                               </code>
                             );

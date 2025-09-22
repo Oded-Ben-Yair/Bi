@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Send, Sparkles, Paperclip, Mic, StopCircle } from 'lucide-react';
 import MessageList from './MessageList';
 import TypingIndicator from './TypingIndicator';
@@ -15,7 +15,7 @@ const ChatInterface: React.FC = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { sendMessage, isTyping } = useWebSocket();
-  const { messages, addMessage, currentConversation } = useAppStore();
+  const { messages, addMessage } = useAppStore();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

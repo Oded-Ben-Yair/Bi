@@ -8,7 +8,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
+const Sidebar: React.FC<SidebarProps> = () => {
   const { conversations, currentConversation, createConversation, selectConversation, deleteConversation } = useAppStore();
 
   const handleNewChat = () => {

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Database, Settings, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import ChatInterface from './components/ChatInterface';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -10,7 +10,7 @@ import { useAppStore } from './store/appStore';
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isConnected } = useWebSocket();
-  const { currentConversation } = useAppStore();
+  useAppStore();
 
   return (
     <div className="flex h-screen bg-copilot-darker overflow-hidden">
