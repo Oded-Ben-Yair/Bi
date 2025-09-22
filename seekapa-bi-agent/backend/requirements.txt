@@ -1,0 +1,65 @@
+# FastAPI and Server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Async HTTP Client
+aiohttp==3.11.12
+httpx==0.28.1
+
+# Environment and Config
+python-dotenv==1.0.1
+pydantic==2.10.5
+pydantic-settings==2.7.0
+
+# WebSocket Support
+websockets==14.1
+python-socketio==5.11.4
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+msal==1.32.0
+
+# Data Processing
+pandas==2.2.3
+numpy==2.2.2
+python-dateutil==2.9.0.post0
+
+# Redis for Caching
+redis==5.2.1
+hiredis==3.1.0
+
+# Logging and Monitoring
+loguru==0.7.3
+python-json-logger==3.3.0
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.2
+pytest-cov==6.0.0
+
+# Development
+black==24.10.0
+flake8==7.1.1
+mypy==1.13.0
+pre-commit==4.0.1
+
+# OpenAI/Azure AI
+openai==1.58.1
+tiktoken==0.8.0
+
+# Rate Limiting
+slowapi==0.1.9
+
+# Background Tasks
+celery==5.4.0
+flower==2.0.1
+
+# Database (optional for session storage)
+sqlalchemy==2.0.36
+alembic==1.14.0
+
+# Utilities
+email-validator==2.2.0
+orjson==3.10.13

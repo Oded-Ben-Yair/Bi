@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar styling */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #1F1F1F;
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #5E5CD6;
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #7C7BDE;
+  }
+
+  /* Firefox scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #5E5CD6 #1F1F1F;
+  }
+}
+
+/* Global styles */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #141414;
+  color: #FFFFFF;
+}
+
+/* Copilot gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #5E5CD6 0%, #7C7BDE 50%, #9B9AE6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Axia gradient text */
+.axia-gradient-text {
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #60A5FA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animation for gradient backgrounds */
+.animated-gradient {
+  background: linear-gradient(270deg, #5E5CD6, #7C7BDE, #9B9AE6, #5E5CD6);
+  background-size: 400% 400%;
+  animation: gradient 8s ease infinite;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(31, 31, 31, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(94, 92, 214, 0.2);
+}
+
+/* Typing indicator animation */
+.typing-dots span {
+  animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Markdown styles for chat messages */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.markdown-content h1 { font-size: 1.5rem; }
+.markdown-content h2 { font-size: 1.25rem; }
+.markdown-content h3 { font-size: 1.125rem; }
+
+.markdown-content p {
+  margin-bottom: 1em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+.markdown-content code {
+  background: rgba(94, 92, 214, 0.1);
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.875em;
+}
+
+.markdown-content pre {
+  background: #141414;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin-bottom: 1em;
+  border: 1px solid #323232;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875em;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid #5E5CD6;
+  padding-left: 1em;
+  margin-left: 0;
+  margin-bottom: 1em;
+  color: #B3B3B3;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: 0.5em;
+  border: 1px solid #323232;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: rgba(94, 92, 214, 0.1);
+  font-weight: 600;
+}
+
+.markdown-content a {
+  color: #7C7BDE;
+  text-decoration: underline;
+}
+
+.markdown-content a:hover {
+  color: #9B9AE6;
+}
+
+/* Loading skeleton animation */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #1F1F1F 0%,
+    #2A2A2A 50%,
+    #1F1F1F 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Focus styles */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #5E5CD6;
+  outline-offset: 2px;
+}
+
+/* Selection styles */
+::selection {
+  background-color: rgba(94, 92, 214, 0.3);
+  color: #FFFFFF;
+}
+
+::-moz-selection {
+  background-color: rgba(94, 92, 214, 0.3);
+  color: #FFFFFF;
+}
