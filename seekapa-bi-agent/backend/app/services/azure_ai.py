@@ -74,11 +74,19 @@ class AzureAIService:
                 return fallback_stream()
             return fallback_response
 
-        # Select the best model for this query
-        model_config = self.model_selector.select_model(query, context, conversation_history)
+        # Select the best model for this query (force GPT-5 for now)
+        model_config = {
+            'deployment_name': self.settings.GPT5_DEPLOYMENT_NAME,
+            'model_name': 'gpt-5',
+            'max_tokens': 4000,
+            'temperature': 0.7
+        }
 
-        # Prepare system message
-        system_message = self._create_system_message(model_config, context)
+        # Prepare optimized system message for GPT-5
+        system_message = {
+            "role": "system",
+            "content": "You are Seekapa Copilot, a helpful AI assistant for business analytics. Answer questions about revenue, sales, and business metrics clearly and concisely. Provide specific insights and recommendations based on the DS-Axia dataset."
+        }
 
         # Prepare headers
         headers = {
@@ -86,33 +94,35 @@ class AzureAIService:
             "Content-Type": "application/json"
         }
 
-        # Prepare request body
+        # Prepare request body with optimized parameters for GPT-5
         body = {
             "messages": [system_message] + messages,
-            "max_completion_tokens": model_config.get("max_completion_tokens", 2048),
-            "temperature": context.get("temperature", 0.7) if context else 0.7,
-            "top_p": context.get("top_p", 0.95) if context else 0.95,
-            "frequency_penalty": 0,
-            "presence_penalty": 0,
+            "max_completion_tokens": 2000,
+            "temperature": 0.9,
+            "top_p": 0.95,
+            "frequency_penalty": 0.1,
+            "presence_penalty": 0.1,
             "stream": stream
         }
 
         # Log request metadata
         request_metadata = {
-            "model": model_config["deployment"],
+            "model": model_config["deployment_name"],
             "query_length": len(query),
             "timestamp": datetime.now().isoformat(),
-            "complexity": model_config["selection_metadata"]["complexity_level"],
             "stream": stream
         }
         self.request_history.append(request_metadata)
-        logger.info(f"Calling {model_config['deployment']} model", extra=request_metadata)
+        logger.info(f"Calling {model_config['deployment_name']} model", extra=request_metadata)
+
+        # Build the correct GPT-5 endpoint
+        endpoint = f"{self.settings.AZURE_OPENAI_ENDPOINT}/openai/deployments/{model_config['deployment_name']}/chat/completions?api-version={self.settings.AZURE_API_VERSION}"
 
         try:
             if stream:
-                return self._stream_response(model_config["endpoint"], headers, body, model_config)
+                return self._stream_response(endpoint, headers, body, model_config)
             else:
-                return await self._get_response(model_config["endpoint"], headers, body, model_config)
+                return await self._get_response(endpoint, headers, body, model_config)
 
         except Exception as e:
             logger.error(f"Error calling GPT-5: {str(e)}", exc_info=True)
@@ -212,8 +222,7 @@ class AzureAIService:
         system_content = self.settings.SYSTEM_PROMPT_TEMPLATE.format(
             dataset_name=self.settings.POWERBI_AXIA_DATASET_NAME,
             dataset_id=self.settings.POWERBI_AXIA_DATASET_ID,
-            model_name=model_config["deployment"],
-            complexity=model_config["selection_metadata"]["complexity_level"],
+            model_name=model_config["deployment_name"],
             timestamp=timestamp
         )
 

@@ -36,6 +36,19 @@ class Settings(BaseSettings):
         "AZURE_OPENAI_ENDPOINT",
         "https://brn-azai.openai.azure.com"
     )
+    AZURE_AI_FOUNDRY_ENDPOINT: str = os.getenv(
+        "AZURE_AI_FOUNDRY_ENDPOINT",
+        "https://brn-azai.services.ai.azure.com/api/projects/seekapa_ai"
+    )
+    AZURE_TARGET_URI: str = os.getenv(
+        "AZURE_TARGET_URI",
+        "https://brn-azai.cognitiveservices.azure.com/openai/responses?api-version=2025-04-01-preview"
+    )
+
+    # GPT-5 Model Configuration
+    GPT5_DEPLOYMENT_NAME: str = os.getenv("GPT5_DEPLOYMENT_NAME", "gpt-5")
+    GPT5_MODEL_VERSION: str = os.getenv("GPT5_MODEL_VERSION", "2025-08-07")
+    AZURE_API_VERSION: str = os.getenv("AZURE_API_VERSION", "2025-04-01-preview")
 
     # Power BI Configuration
     POWERBI_CLIENT_ID: str = os.getenv("POWERBI_CLIENT_ID", "")
