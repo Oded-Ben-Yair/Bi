@@ -59,6 +59,21 @@ class AzureAIService:
         if not self.session:
             await self.initialize()
 
+        # Check if API key is configured
+        if not self.settings.AZURE_OPENAI_API_KEY or self.settings.AZURE_OPENAI_API_KEY == "":
+            logger.warning("Azure OpenAI API key not configured, using fallback response")
+            fallback_response = (
+                "I'm currently unable to connect to the Azure AI service. "
+                "Please ensure the Azure OpenAI API credentials are properly configured. "
+                "In the meantime, I can help you understand the DS-Axia dataset structure "
+                "and provide general guidance about Power BI analytics."
+            )
+            if stream:
+                async def fallback_stream():
+                    yield fallback_response
+                return fallback_stream()
+            return fallback_response
+
         # Select the best model for this query
         model_config = self.model_selector.select_model(query, context, conversation_history)
 
@@ -74,7 +89,7 @@ class AzureAIService:
         # Prepare request body
         body = {
             "messages": [system_message] + messages,
-            "max_tokens": model_config.get("max_tokens", 2048),
+            "max_completion_tokens": model_config.get("max_completion_tokens", 2048),
             "temperature": context.get("temperature", 0.7) if context else 0.7,
             "top_p": context.get("top_p", 0.95) if context else 0.95,
             "frequency_penalty": 0,
@@ -101,7 +116,28 @@ class AzureAIService:
 
         except Exception as e:
             logger.error(f"Error calling GPT-5: {str(e)}", exc_info=True)
-            return self._get_fallback_response(str(e))
+            error_msg = str(e)
+            if "401" in error_msg or "Access denied" in error_msg:
+                fallback = (
+                    "Authentication failed with Azure OpenAI. Please check your API credentials. "
+                    "I can still help you understand the DS-Axia dataset structure and Power BI concepts."
+                )
+            elif "404" in error_msg:
+                fallback = (
+                    "The specified GPT-5 model deployment was not found. "
+                    "Please verify the deployment names in your Azure OpenAI resource."
+                )
+            else:
+                fallback = (
+                    f"An error occurred while processing your request: {error_msg}. "
+                    "I can still provide general guidance about DS-Axia analytics."
+                )
+
+            if stream:
+                async def error_stream():
+                    yield fallback
+                return error_stream()
+            return fallback
 
     async def _stream_response(
         self,

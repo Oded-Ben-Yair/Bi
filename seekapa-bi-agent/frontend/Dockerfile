@@ -1,4 +1,4 @@
-# Frontend Dockerfile - Multi-stage build
+# Frontend Dockerfile - Production Build for CEO Deployment
 FROM node:20-alpine as builder
 
 # Set working directory

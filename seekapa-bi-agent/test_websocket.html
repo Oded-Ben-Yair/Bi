@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f14c4c; }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            background: #2d2d30;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #005a9e; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Test for Seekapa BI Agent</h1>
+    <div id="status">Status: Not connected</div>
+    <div>
+        <button onclick="testConnection()">Test WebSocket</button>
+        <button onclick="sendMessage()">Send Test Message</button>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        let ws = null;
+        const WS_URL = 'ws://localhost:8001/ws/chat';
+
+        function log(message, type = '') {
+            const logDiv = document.getElementById('log');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.insertBefore(msgDiv, logDiv.firstChild);
+        }
+
+        function updateStatus(status, type = '') {
+            document.getElementById('status').innerHTML = `Status: <span class="${type}">${status}</span>`;
+        }
+
+        function testConnection() {
+            log(`Connecting to ${WS_URL}...`);
+
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                log('✅ WebSocket Connected Successfully!', 'success');
+                updateStatus('Connected', 'success');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                log(`📨 Received: ${JSON.stringify(data, null, 2)}`);
+
+                if (data.type === 'connection') {
+                    log(`Client ID: ${data.client_id}`, 'success');
+                } else if (data.type === 'response') {
+                    log('✅ Response received from AI', 'success');
+                }
+            };
+
+            ws.onerror = (error) => {
+                log(`❌ Error: ${error.message || 'Connection failed'}`, 'error');
+                updateStatus('Error', 'error');
+            };
+
+            ws.onclose = () => {
+                log('WebSocket connection closed');
+                updateStatus('Disconnected');
+            };
+        }
+
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('❌ Not connected. Click "Test WebSocket" first.', 'error');
+                return;
+            }
+
+            const message = {
+                type: 'chat',
+                message: 'Hello! Can you help me analyze the Axia dataset?',
+                stream: false,
+                context: {
+                    dataset: 'axia',
+                    timestamp: new Date().toISOString()
+                }
+            };
+
+            log(`Sending message: ${JSON.stringify(message, null, 2)}`);
+            ws.send(JSON.stringify(message));
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            setTimeout(testConnection, 1000);
+        };
+    </script>
+</body>
+</html>

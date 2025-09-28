@@ -36,7 +36,7 @@ class ConnectionManager:
         Returns:
             Client ID for this connection
         """
-        await websocket.accept()
+        await websocket.accept() # Already accepted in main.py
 
         # Generate client ID if not provided
         if not client_id:
@@ -321,18 +321,33 @@ class WebSocketManager:
                     if data.get("stream", False):
                         # Stream response
                         full_response = ""
-                        async for chunk in ai_service.call_gpt5(
+                        response = await ai_service.call_gpt5(
                             messages=messages,
                             query=user_message,
                             context=context,
                             stream=True,
                             conversation_history=conversation_history
-                        ):
-                            full_response += chunk
+                        )
+
+                        # Check if response is an async generator
+                        if hasattr(response, '__aiter__'):
+                            async for chunk in response:
+                                full_response += chunk
+                                await self.connection_manager.send_personal_message(
+                                    {
+                                        "type": "stream",
+                                        "content": chunk,
+                                        "timestamp": datetime.now().isoformat()
+                                    },
+                                    client_id
+                                )
+                        else:
+                            # If not a generator, treat as complete response
+                            full_response = response if isinstance(response, str) else str(response)
                             await self.connection_manager.send_personal_message(
                                 {
                                     "type": "stream",
-                                    "content": chunk,
+                                    "content": full_response,
                                     "timestamp": datetime.now().isoformat()
                                 },
                                 client_id

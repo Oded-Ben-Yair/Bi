@@ -7,14 +7,13 @@ import os
 import json
 import asyncio
 import uuid
-import aiohttp
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, status, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse, Response
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 import logging
 from loguru import logger
@@ -23,8 +22,6 @@ from app.config import settings
 from app.services.azure_ai import AzureAIService
 from app.services.powerbi import PowerBIService
 from app.services.websocket import WebSocketManager
-from app.services.ai_foundry_agent import AIFoundryAgent
-from app.services.logic_apps import LogicAppsService
 
 # Configure logging
 logging.basicConfig(
@@ -36,8 +33,6 @@ logging.basicConfig(
 azure_ai_service = AzureAIService()
 powerbi_service = PowerBIService()
 websocket_manager = WebSocketManager()
-ai_foundry_agent = AIFoundryAgent()
-logic_apps_service = LogicAppsService()
 
 # Store conversations in memory (in production, use Redis or database)
 conversations: Dict[str, List[Dict]] = {}
@@ -50,8 +45,6 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Seekapa Copilot...")
     await azure_ai_service.initialize()
     await powerbi_service.initialize()
-    await ai_foundry_agent.initialize()
-    await logic_apps_service.initialize()
     await websocket_manager.start_cleanup_task()
     logger.info("Seekapa Copilot started successfully!")
 
@@ -61,8 +54,6 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Seekapa Copilot...")
     await azure_ai_service.cleanup()
     await powerbi_service.cleanup()
-    await ai_foundry_agent.cleanup()
-    await logic_apps_service.cleanup()
     await websocket_manager.stop_cleanup_task()
     logger.info("Seekapa Copilot shut down successfully!")
 
@@ -116,22 +107,6 @@ class DataAnalysisRequest(BaseModel):
     question: Optional[str] = Field(None, description="Specific question about the data")
 
 
-class WebhookRequest(BaseModel):
-    """Webhook request model for Logic Apps"""
-    action: str = Field(..., description="Action to perform")
-    data: Dict[str, Any] = Field(..., description="Action data")
-    workflow_id: Optional[str] = Field(None, description="Workflow ID for callbacks")
-    callback_url: Optional[str] = Field(None, description="Callback URL for async responses")
-
-
-class AgentRequest(BaseModel):
-    """Agent request model"""
-    message: str = Field(..., description="User message")
-    thread_id: Optional[str] = Field(None, description="Thread ID for conversation continuity")
-    agent_name: Optional[str] = Field("seekapa-copilot", description="Agent name to use")
-    tools: Optional[List[str]] = Field(None, description="Tools to enable for agent")
-
-
 # API Endpoints
 
 @app.get("/")
@@ -166,94 +141,10 @@ async def health_check():
         "services": {
             "azure_ai": "operational",
             "powerbi": "operational",
-            "websocket": "operational",
-            "ai_foundry": "operational",
-            "logic_apps": "operational"
+            "websocket": "operational"
         },
         "connections": websocket_manager.connection_manager.get_connection_stats()
     }
-
-
-@app.get("/api/v1/health/logic-app")
-async def health_check_logic_apps():
-    """Health check for Logic Apps connectivity"""
-    try:
-        result = await logic_apps_service.test_connection()
-        return JSONResponse(
-            status_code=200 if result["status"] != "error" else 503,
-            content={
-                "service": "Azure Logic Apps",
-                "status": result["status"],
-                "details": result,
-                "timestamp": datetime.now().isoformat()
-            }
-        )
-    except Exception as e:
-        logger.error(f"Logic Apps health check error: {e}")
-        return JSONResponse(
-            status_code=503,
-            content={
-                "service": "Azure Logic Apps",
-                "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
-        )
-
-
-@app.get("/api/v1/health/ai-foundry")
-async def health_check_ai_foundry():
-    """Health check for AI Foundry agent service"""
-    try:
-        # Test by creating a temporary thread
-        test_thread = await ai_foundry_agent.create_thread({"health_check": True})
-        await ai_foundry_agent.delete_thread(test_thread)
-
-        return JSONResponse(
-            status_code=200,
-            content={
-                "service": "Azure AI Foundry",
-                "status": "operational",
-                "endpoint": ai_foundry_agent.endpoint,
-                "project": ai_foundry_agent.project,
-                "agent_id": ai_foundry_agent.agent_id,
-                "timestamp": datetime.now().isoformat()
-            }
-        )
-    except Exception as e:
-        logger.error(f"AI Foundry health check error: {e}")
-        return JSONResponse(
-            status_code=503,
-            content={
-                "service": "Azure AI Foundry",
-                "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
-        )
-
-
-@app.get("/api/v1/health/webhook")
-async def health_check_webhook():
-    """Validate webhook configuration"""
-    webhook_config = {
-        "logic_app_url": bool(settings.AZURE_LOGIC_APP_URL),
-        "logic_app_key": bool(settings.AZURE_LOGIC_APP_KEY),
-        "ai_foundry_endpoint": bool(settings.AZURE_AI_FOUNDRY_ENDPOINT),
-        "callback_url": f"{settings.APP_BASE_URL}/api/v1/webhook/callback"
-    }
-
-    all_configured = all(webhook_config.values())
-
-    return JSONResponse(
-        status_code=200 if all_configured else 503,
-        content={
-            "service": "Webhook Configuration",
-            "status": "configured" if all_configured else "incomplete",
-            "configuration": webhook_config,
-            "timestamp": datetime.now().isoformat()
-        }
-    )
 
 
 @app.post("/api/chat")
@@ -460,189 +351,6 @@ async def websocket_chat(websocket: WebSocket):
         logger.error(f"WebSocket error: {str(e)}", exc_info=True)
         if client_id:
             websocket_manager.connection_manager.disconnect(client_id)
-
-
-# Webhook Endpoints for Logic Apps and AI Foundry Integration
-
-@app.post("/api/v1/webhook/logic-app")
-async def webhook_logic_app(request: Request):
-    """
-    Main webhook endpoint for Azure Logic Apps
-    Accepts HTTP triggers from Logic Apps workflows
-    """
-    try:
-        body = await request.json()
-        headers = dict(request.headers)
-
-        # Process webhook
-        result = await logic_apps_service.handle_webhook(
-            webhook_type="logic_app",
-            payload=body,
-            headers=headers
-        )
-
-        return JSONResponse(status_code=200, content=result)
-
-    except Exception as e:
-        logger.error(f"Logic App webhook error: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
-
-
-@app.post("/api/v1/webhook/agent-trigger")
-async def webhook_agent_trigger(request: WebhookRequest):
-    """
-    Webhook endpoint for triggering AI Foundry agents
-    Enables Logic Apps to trigger agent actions
-    """
-    try:
-        # Create or get thread
-        thread_id = await ai_foundry_agent.create_thread({
-            "source": "logic_app",
-            "workflow_id": request.workflow_id
-        })
-
-        # Add user message to thread
-        await ai_foundry_agent.add_message(
-            thread_id=thread_id,
-            role="user",
-            content=request.data.get("message", "Process request")
-        )
-
-        # Create agent configuration
-        agent_config = await ai_foundry_agent.create_agent(
-            name="logic-app-agent",
-            instructions="Process Logic App requests and provide intelligent responses",
-            tools=request.data.get("tools", ["query_powerbi_data", "trigger_logic_app"])
-        )
-
-        # Run agent
-        result = await ai_foundry_agent.run_agent(
-            thread_id=thread_id,
-            agent_config=agent_config,
-            stream=False
-        )
-
-        # Send callback if URL provided
-        if request.callback_url:
-            async with aiohttp.ClientSession() as session:
-                await session.post(request.callback_url, json={
-                    "workflow_id": request.workflow_id,
-                    "result": result
-                })
-
-        return JSONResponse(status_code=200, content={
-            "status": "success",
-            "thread_id": thread_id,
-            "result": result
-        })
-
-    except Exception as e:
-        logger.error(f"Agent trigger webhook error: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
-
-
-@app.post("/api/v1/webhook/callback")
-async def webhook_callback(request: Request):
-    """
-    Callback endpoint for async responses from Logic Apps
-    """
-    try:
-        body = await request.json()
-        headers = dict(request.headers)
-
-        result = await logic_apps_service.handle_webhook(
-            webhook_type="callback",
-            payload=body,
-            headers=headers
-        )
-
-        return JSONResponse(status_code=200, content=result)
-
-    except Exception as e:
-        logger.error(f"Callback webhook error: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
-
-
-@app.post("/api/v1/agent/run")
-async def run_agent(request: AgentRequest):
-    """
-    Run an AI Foundry agent with function calling capabilities
-    """
-    try:
-        # Create or get thread
-        thread_id = request.thread_id
-        if not thread_id:
-            thread_id = await ai_foundry_agent.create_thread()
-
-        # Add user message
-        await ai_foundry_agent.add_message(
-            thread_id=thread_id,
-            role="user",
-            content=request.message
-        )
-
-        # Create agent with specified tools
-        agent_config = await ai_foundry_agent.create_agent(
-            name=request.agent_name,
-            instructions=f"You are {request.agent_name}, a helpful AI assistant for analyzing Power BI data and orchestrating workflows.",
-            tools=request.tools
-        )
-
-        # Run the agent
-        result = await ai_foundry_agent.run_agent(
-            thread_id=thread_id,
-            agent_config=agent_config
-        )
-
-        return JSONResponse(status_code=200, content={
-            "thread_id": thread_id,
-            "agent_id": agent_config["id"],
-            "result": result
-        })
-
-    except Exception as e:
-        logger.error(f"Agent run error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/v1/logic-app/trigger")
-async def trigger_logic_app(workflow_name: str, payload: Dict[str, Any]):
-    """
-    Trigger a Logic App workflow from the application
-    """
-    try:
-        result = await logic_apps_service.trigger_workflow(
-            workflow_name=workflow_name,
-            payload=payload,
-            wait_for_response=True
-        )
-
-        return JSONResponse(status_code=200, content=result)
-
-    except Exception as e:
-        logger.error(f"Logic App trigger error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/v1/logic-app/status/{workflow_id}")
-async def get_workflow_status(workflow_id: str):
-    """Get Logic App workflow execution status"""
-    try:
-        status = await logic_apps_service.get_workflow_status(workflow_id)
-        return JSONResponse(status_code=200, content=status)
-
-    except Exception as e:
-        logger.error(f"Workflow status error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Error Handlers

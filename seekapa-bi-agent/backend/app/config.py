@@ -74,6 +74,33 @@ class Settings(BaseSettings):
     WS_MAX_CONNECTIONS: int = 100
     WS_MESSAGE_QUEUE_SIZE: int = 1000
 
+    # Azure Logic Apps Configuration
+    AZURE_LOGIC_APP_URL: str = os.getenv(
+        "AZURE_LOGIC_APP_URL",
+        "https://prod-xx.swedencentral.logic.azure.com/workflows/corppowerbiai"
+    )
+    AZURE_LOGIC_APP_KEY: str = os.getenv("AZURE_LOGIC_APP_KEY", "")
+
+    # Azure AI Foundry Configuration
+    AZURE_AI_FOUNDRY_ENDPOINT: str = os.getenv(
+        "AZURE_AI_FOUNDRY_ENDPOINT",
+        "https://brn-azai.services.ai.azure.com"
+    )
+    AZURE_AI_FOUNDRY_PROJECT: str = os.getenv(
+        "AZURE_AI_FOUNDRY_PROJECT",
+        "seekapa-bi-agent"
+    )
+    AZURE_AGENT_ID: str = os.getenv(
+        "AZURE_AGENT_ID",
+        "seekapa-copilot-agent"
+    )
+
+    # Application Base URL (for callbacks)
+    APP_BASE_URL: str = os.getenv(
+        "APP_BASE_URL",
+        f"http://localhost:{APP_PORT}"
+    )
+
     # Model Selection Thresholds
     QUERY_COMPLEXITY_SIMPLE_THRESHOLD: int = 10
     QUERY_COMPLEXITY_MEDIUM_THRESHOLD: int = 20
@@ -85,7 +112,7 @@ class Settings(BaseSettings):
         return {
             "gpt-5": {
                 "deployment": "gpt-5",
-                "endpoint": f"{self.AZURE_AI_SERVICES_ENDPOINT}/openai/deployments/gpt-5/chat/completions?api-version=2025-01-01-preview",
+                "endpoint": f"{self.AZURE_AI_SERVICES_ENDPOINT}/openai/deployments/gpt-5/chat/completions?api-version=2025-04-01-preview",
                 "max_tokens": 4096,
                 "use_case": "complex_analysis",
                 "description": "Full GPT-5 for complex analytics and forecasting",
@@ -103,7 +130,7 @@ class Settings(BaseSettings):
             },
             "gpt-5-nano": {
                 "deployment": "gpt-5-nano",
-                "endpoint": f"{self.AZURE_AI_SERVICES_ENDPOINT}/openai/deployments/gpt-5-nano/chat/completions?api-version=2025-01-01-preview",
+                "endpoint": f"{self.AZURE_AI_SERVICES_ENDPOINT}/openai/deployments/gpt-5-nano/chat/completions?api-version=2025-04-01-preview",
                 "max_tokens": 1024,
                 "use_case": "simple_queries",
                 "description": "Ultra-fast for simple questions",
@@ -112,7 +139,7 @@ class Settings(BaseSettings):
             },
             "gpt-5-chat": {
                 "deployment": "gpt-5-chat",
-                "endpoint": f"{self.AZURE_AI_SERVICES_ENDPOINT}/openai/deployments/gpt-5-chat/chat/completions?api-version=2025-01-01-preview",
+                "endpoint": f"{self.AZURE_AI_SERVICES_ENDPOINT}/openai/deployments/gpt-5-chat/chat/completions?api-version=2025-04-01-preview",
                 "max_tokens": 2048,
                 "use_case": "conversational",
                 "description": "Optimized for multi-turn conversations",

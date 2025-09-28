@@ -39,11 +39,11 @@ pytest==8.3.4
 pytest-asyncio==0.25.2
 pytest-cov==6.0.0
 
-# Development
-black==24.10.0
-flake8==7.1.1
-mypy==1.13.0
-pre-commit==4.0.1
+# Development (optional in production)
+# black==24.10.0
+# flake8==7.1.1
+# mypy==1.13.0
+# pre-commit==4.0.1
 
 # OpenAI/Azure AI
 openai==1.58.1

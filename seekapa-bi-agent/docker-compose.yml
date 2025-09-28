@@ -31,6 +31,10 @@ services:
     environment:
       - REDIS_HOST=redis
       - APP_ENV=production
+      - APP_BASE_URL=${APP_BASE_URL:-https://brn-azai.services.ai.azure.com/api/projects/seekapa-bi-agent}
+      - AZURE_AI_FOUNDRY_ENDPOINT=${AZURE_AI_FOUNDRY_ENDPOINT:-https://brn-azai.services.ai.azure.com}
+      - AZURE_AI_FOUNDRY_PROJECT=${AZURE_AI_FOUNDRY_PROJECT:-seekapa-bi-agent}
+      - AZURE_LOGIC_APP_URL=${AZURE_LOGIC_APP_URL:-https://prod-xx.swedencentral.logic.azure.com/workflows/corppowerbiai}
     depends_on:
       redis:
         condition: service_healthy
