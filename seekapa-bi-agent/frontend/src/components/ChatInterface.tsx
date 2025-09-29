@@ -17,6 +17,9 @@ const ChatInterface: React.FC = () => {
   const { sendMessage, isTyping } = useWebSocket();
   const { messages, addMessage } = useAppStore();
 
+  // Debug log messages
+  console.log('🎨 ChatInterface: Current messages:', messages);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };

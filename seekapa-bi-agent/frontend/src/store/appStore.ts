@@ -31,9 +31,14 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
   // Messages
   messages: [],
-  addMessage: (message) => set((state) => ({
-    messages: [...state.messages, message],
-  })),
+  addMessage: (message) => {
+    console.log('🏪 Store: Adding message to store:', message);
+    set((state) => {
+      const newMessages = [...state.messages, message];
+      console.log('🏪 Store: Total messages now:', newMessages.length, newMessages);
+      return { messages: newMessages };
+    });
+  },
   updateLastMessage: (content) => set((state) => {
     const messages = [...state.messages];
     if (messages.length > 0) {

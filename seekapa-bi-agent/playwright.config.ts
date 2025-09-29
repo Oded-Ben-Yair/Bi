@@ -22,7 +22,7 @@ export default defineConfig({
   ],
   use: {
     // Global test settings
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -72,10 +72,10 @@ export default defineConfig({
     }
   ],
 
-  // Development server (will be started manually)
+  // Development server (frontend already running on 5173)
   webServer: {
-    command: 'echo "Please start the application manually with ./start-production.sh"',
-    port: 3000,
+    command: 'echo "Using existing dev server"',
+    port: 5173,
     reuseExistingServer: true,
     timeout: 5000
   }

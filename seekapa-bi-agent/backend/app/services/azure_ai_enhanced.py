@@ -334,28 +334,28 @@ Instructions:
         # Model-specific parameter optimization
         if model_name == "gpt-5-nano":
             body.update({
-                "temperature": 0.3,  # Lower for consistency
+                "temperature": 1.0,  # GPT-5 only supports temperature=1.0
                 "top_p": 0.8,
                 "frequency_penalty": 0.2,
                 "presence_penalty": 0.1
             })
         elif model_name == "gpt-5-mini":
             body.update({
-                "temperature": 0.5,
+                "temperature": 1.0,  # GPT-5 only supports temperature=1.0
                 "top_p": 0.9,
                 "frequency_penalty": 0.1,
                 "presence_penalty": 0.1
             })
         elif model_name == "gpt-5-chat":
             body.update({
-                "temperature": 0.7,
+                "temperature": 1.0,  # GPT-5 only supports temperature=1.0
                 "top_p": 0.95,
                 "frequency_penalty": 0.1,
                 "presence_penalty": 0.15
             })
         else:  # gpt-5
             body.update({
-                "temperature": 0.8,
+                "temperature": 1.0,  # GPT-5 only supports temperature=1.0
                 "top_p": 0.95,
                 "frequency_penalty": 0.05,
                 "presence_penalty": 0.1

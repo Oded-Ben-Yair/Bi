@@ -1,0 +1,66 @@
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[log] 🔌 Creating single WebSocket connection...
+[log] 🎨 ChatInterface: Current messages: []
+[log] 🎨 ChatInterface: Current messages: []
+[log] ✅ WebSocket Connected (Singleton)
+[log] 📨 WebSocket raw message: {"type":"connection","status":"connected","client_id":"bc0a6088-b667-4265-82ab-6d5d12880ec7","group":"default","compression":true,"heartbeat_interval":30,"message":"Welcome to Seekapa Copilot! Ready for high-performance analysis.","timestamp":"2025-09-29T12:51:03.612168","pool_stats":{"active":5,"max":1000,"available":995,"waiting":0}}
+[log] 📦 Parsed message: {type: connection, status: connected, client_id: bc0a6088-b667-4265-82ab-6d5d12880ec7, group: default, compression: true}
+[log] Connection established: bc0a6088-b667-4265-82ab-6d5d12880ec7
+[log] Connection established: bc0a6088-b667-4265-82ab-6d5d12880ec7
+[log] 🎨 ChatInterface: Current messages: []
+[log] 🎨 ChatInterface: Current messages: []
+[log] 🎨 ChatInterface: Current messages: []
+[log] 🎨 ChatInterface: Current messages: []
+[log] 🏪 Store: Adding message to store: {id: 1759150265866, role: user, content: What is the total revenue in the Axia dataset?, timestamp: 2025-09-29T12:51:05.866Z}
+[log] 🏪 Store: Total messages now: 1 [Object]
+[log] 📤 Sending message: {type: chat, message: What is the total revenue in the Axia dataset?, stream: false, context: Object}
+[log] 🎨 ChatInterface: Current messages: [Object]
+[log] 🎨 ChatInterface: Current messages: [Object]
+[log] 📨 WebSocket raw message: {"type":"typing","is_typing":true,"timestamp":"2025-09-29T12:51:05.869043"}
+[log] 📦 Parsed message: {type: typing, is_typing: true, timestamp: 2025-09-29T12:51:05.869043}
+[log] 🎨 ChatInterface: Current messages: [Object]
+[log] 🎨 ChatInterface: Current messages: [Object]
+[log] 📨 WebSocket raw message: {"type":"response","message":"The total revenue is $6,150,973,282.41.","model_used":"auto-selected","timestamp":"2025-09-29T12:51:08.271296"}
+[log] 📦 Parsed message: {type: response, message: The total revenue is $6,150,973,282.41., model_used: auto-selected, timestamp: 2025-09-29T12:51:08.271296}
+[log] 📥 Response received, adding to messages: The total revenue is $6,150,973,282.41.
+[log] 💬 Adding assistant message: {id: 1759150268272, role: assistant, content: The total revenue is $6,150,973,282.41., timestamp: 2025-09-29T12:51:08.271296, model: auto-selected}
+[log] 🏪 Store: Adding message to store: {id: 1759150268272, role: assistant, content: The total revenue is $6,150,973,282.41., timestamp: 2025-09-29T12:51:08.271296, model: auto-selected}
+[log] 🏪 Store: Total messages now: 2 [Object, Object]
+[log] 📥 Response received, adding to messages: The total revenue is $6,150,973,282.41.
+[log] 💬 Adding assistant message: {id: 1759150268272, role: assistant, content: The total revenue is $6,150,973,282.41., timestamp: 2025-09-29T12:51:08.271296, model: auto-selected}
+[log] 🏪 Store: Adding message to store: {id: 1759150268272, role: assistant, content: The total revenue is $6,150,973,282.41., timestamp: 2025-09-29T12:51:08.271296, model: auto-selected}
+[log] 🏪 Store: Total messages now: 3 [Object, Object, Object]
+[log] 🎨 ChatInterface: Current messages: [Object, Object, Object]
+[log] 🎨 ChatInterface: Current messages: [Object, Object, Object]
+[error] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s 1759150268272 
+    at div
+    at MessageList (http://localhost:3000/src/components/MessageList.tsx:26:24)
+    at div
+    at div
+    at div
+    at ChatInterface (http://localhost:3000/src/components/ChatInterface.tsx:28:29)
+    at main
+    at div
+    at div
+    at App (http://localhost:3000/src/App.tsx:28:41)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=c3dbb0f4:3081:3)
+[log] 🎨 ChatInterface: Current messages: [Object, Object, Object]
+[log] 🎨 ChatInterface: Current messages: [Object, Object, Object]
+[error] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s 1759150268272 
+    at div
+    at MessageList (http://localhost:3000/src/components/MessageList.tsx:26:24)
+    at div
+    at div
+    at div
+    at ChatInterface (http://localhost:3000/src/components/ChatInterface.tsx:28:29)
+    at main
+    at div
+    at div
+    at App (http://localhost:3000/src/App.tsx:28:41)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=c3dbb0f4:3081:3)
+[log] 📨 WebSocket raw message: {"type":"typing","is_typing":false,"timestamp":"2025-09-29T12:51:08.271464"}
+[log] 📦 Parsed message: {type: typing, is_typing: false, timestamp: 2025-09-29T12:51:08.271464}
+[log] 🎨 ChatInterface: Current messages: [Object, Object, Object]
+[log] 🎨 ChatInterface: Current messages: [Object, Object, Object]

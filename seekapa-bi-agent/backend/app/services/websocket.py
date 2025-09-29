@@ -598,9 +598,11 @@ class WebSocketManager:
                 elif message_type == "chat":
                     user_message = data.get("message", "")
                     context = data.get("context", {})
+                    logger.info(f"WebSocket chat message from {client_id}: {user_message[:100]}")
 
                     # Send typing indicator
                     await self.connection_manager.send_typing_indicator(client_id, True)
+                    logger.debug(f"Sent typing indicator to {client_id}")
 
                     # Build messages for AI
                     messages = [{"role": "user", "content": user_message}]
@@ -612,6 +614,7 @@ class WebSocketManager:
                             messages.insert(0, {"role": "user", "content": turn.get("user", "")})
 
                     # Get AI response
+                    logger.info(f"Calling AI service for {client_id}, stream={data.get('stream', False)}")
                     if data.get("stream", False):
                         # Stream response
                         full_response = ""
@@ -666,6 +669,7 @@ class WebSocketManager:
 
                     else:
                         # Get complete response
+                        logger.info(f"Getting non-streamed AI response for {client_id}")
                         ai_response = await ai_service.call_gpt5(
                             messages=messages,
                             query=user_message,
@@ -673,17 +677,24 @@ class WebSocketManager:
                             stream=False,
                             conversation_history=conversation_history
                         )
+                        logger.info(f"AI response received for {client_id}: {str(ai_response)[:200]}")
 
                         # Send response
+                        response_msg = {
+                            "type": "response",
+                            "message": ai_response,
+                            "model_used": context.get("model", "auto-selected"),
+                            "timestamp": datetime.now().isoformat()
+                        }
+                        logger.info(f"Sending response to {client_id}: {response_msg}")
+                        # CRITICAL: Bypass batching AND compression for chat responses to ensure immediate delivery
                         await self.connection_manager.send_personal_message(
-                            {
-                                "type": "response",
-                                "message": ai_response,
-                                "model_used": context.get("model", "auto-selected"),
-                                "timestamp": datetime.now().isoformat()
-                            },
-                            client_id
+                            response_msg,
+                            client_id,
+                            bypass_batch=True,
+                            use_compression=False  # Disable compression - frontend expects JSON
                         )
+                        logger.info(f"Response sent successfully to {client_id}")
 
                         # Store in history
                         conversation_history.append({

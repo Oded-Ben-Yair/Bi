@@ -1,52 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '../store/appStore';
-import { toast } from 'react-hot-toast';
-
-const WS_URL = 'ws://localhost:8000/ws/chat';
+import WebSocketManager from '../services/websocketManager';
 
 export const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const ws = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
-  const reconnectAttempts = useRef(0);
-
   const { addMessage, updateLastMessage } = useAppStore();
 
-  const connect = useCallback(() => {
-    try {
-      ws.current = new WebSocket(WS_URL);
+  const wsManager = WebSocketManager.getInstance();
 
-      ws.current.onopen = () => {
-        console.log('WebSocket Connected');
-        setIsConnected(true);
-        reconnectAttempts.current = 0;
-        toast.success('Connected to Seekapa Copilot');
-      };
-
-      ws.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleMessage(data);
-      };
-
-      ws.current.onerror = (error) => {
-        console.error('WebSocket Error:', error);
-        toast.error('Connection error');
-      };
-
-      ws.current.onclose = () => {
-        console.log('WebSocket Disconnected');
-        setIsConnected(false);
-        handleReconnect();
-      };
-
-    } catch (error) {
-      console.error('Failed to connect:', error);
-      handleReconnect();
-    }
-  }, []);
-
-  const handleMessage = (data: any) => {
+  const handleMessage = useCallback((data: any) => {
     switch (data.type) {
       case 'connection':
         console.log('Connection established:', data.client_id);
@@ -57,14 +20,17 @@ export const useWebSocket = () => {
         break;
 
       case 'response':
+        console.log('📥 Response received, adding to messages:', data.message);
         setIsTyping(false);
-        addMessage({
+        const assistantMsg = {
           id: Date.now().toString(),
           role: 'assistant',
           content: data.message,
           timestamp: data.timestamp,
           model: data.model_used,
-        });
+        };
+        console.log('💬 Adding assistant message:', assistantMsg);
+        addMessage(assistantMsg);
         break;
 
       case 'stream':
@@ -78,7 +44,7 @@ export const useWebSocket = () => {
 
       case 'error':
         setIsTyping(false);
-        toast.error(data.error || 'An error occurred');
+        // Error toast is handled in WebSocketManager
         break;
 
       case 'heartbeat':
@@ -88,76 +54,51 @@ export const useWebSocket = () => {
       default:
         console.log('Unknown message type:', data.type);
     }
-  };
+  }, [addMessage, updateLastMessage]);
 
-  const handleReconnect = () => {
-    if (reconnectAttempts.current < 5) {
-      reconnectAttempts.current++;
-      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
-
-      toast.loading(`Reconnecting... (Attempt ${reconnectAttempts.current}/5)`);
-
-      reconnectTimer.current = setTimeout(() => {
-        connect();
-      }, delay);
-    } else {
-      toast.error('Failed to connect. Please refresh the page.');
-    }
-  };
-
-  const sendMessage = useCallback(async (message: string, stream: boolean = false) => {
-    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
-      toast.error('Not connected. Please wait...');
-      return;
-    }
-
-    try {
-      ws.current.send(JSON.stringify({
-        type: 'chat',
-        message,
-        stream,
-        context: {
-          dataset: 'axia',
-          timestamp: new Date().toISOString(),
-        },
-      }));
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      toast.error('Failed to send message');
-    }
-  }, []);
-
-  const disconnect = useCallback(() => {
-    if (reconnectTimer.current) {
-      clearTimeout(reconnectTimer.current);
-    }
-    if (ws.current) {
-      ws.current.close();
-      ws.current = null;
-    }
+  const handleConnectionChange = useCallback((connected: boolean) => {
+    setIsConnected(connected);
   }, []);
 
   useEffect(() => {
-    connect();
+    // Register event listeners
+    wsManager.on('message', handleMessage);
+    wsManager.on('connected', handleConnectionChange);
+
+    // Set initial connection state
+    setIsConnected(wsManager.isConnected());
 
     // Send heartbeat every 30 seconds
     const heartbeatInterval = setInterval(() => {
-      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: 'heartbeat' }));
-      }
+      wsManager.sendHeartbeat();
     }, 30000);
 
+    // Cleanup
     return () => {
       clearInterval(heartbeatInterval);
-      disconnect();
+      wsManager.off('message', handleMessage);
+      wsManager.off('connected', handleConnectionChange);
     };
-  }, [connect, disconnect]);
+  }, [handleMessage, handleConnectionChange]);
+
+  const sendMessage = useCallback(async (message: string, stream: boolean = false) => {
+    return wsManager.sendMessage(message, stream);
+  }, []);
+
+  const disconnect = useCallback(() => {
+    wsManager.disconnect();
+  }, []);
+
+  const reconnect = useCallback(() => {
+    // The WebSocketManager handles reconnection automatically
+    // This is here for compatibility
+  }, []);
 
   return {
     isConnected,
     isTyping,
     sendMessage,
     disconnect,
-    reconnect: connect,
+    reconnect,
   };
 };

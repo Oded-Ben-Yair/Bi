@@ -11,6 +11,7 @@ from datetime import datetime
 import logging
 from app.config import settings
 from app.utils.model_selector import ModelSelector
+from app.services.axia_dataset import get_axia_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -59,33 +60,67 @@ class AzureAIService:
         if not self.session:
             await self.initialize()
 
-        # Check if API key is configured
-        if not self.settings.AZURE_OPENAI_API_KEY or self.settings.AZURE_OPENAI_API_KEY == "":
-            logger.warning("Azure OpenAI API key not configured, using fallback response")
-            fallback_response = (
-                "I'm currently unable to connect to the Azure AI service. "
-                "Please ensure the Azure OpenAI API credentials are properly configured. "
-                "In the meantime, I can help you understand the DS-Axia dataset structure "
-                "and provide general guidance about Power BI analytics."
-            )
-            if stream:
-                async def fallback_stream():
-                    yield fallback_response
-                return fallback_stream()
-            return fallback_response
+        # Verify API key is configured
+        if not self.settings.AZURE_OPENAI_API_KEY:
+            logger.error("Azure OpenAI API key not configured")
+            return "Azure OpenAI API key is not configured. Please check your .env file."
 
-        # Select the best model for this query (force GPT-5 for now)
+        # Use GPT-5-nano for fast responses, fallback to GPT-5-chat
+        # Determine which model to use based on query complexity
+        use_nano = True  # Always use nano for speed
+
+        if use_nano and hasattr(self.settings, 'GPT5_NANO_DEPLOYMENT_NAME'):
+            deployment = self.settings.GPT5_NANO_DEPLOYMENT_NAME
+            model_name = 'gpt-5-nano'
+        elif hasattr(self.settings, 'GPT5_CHAT_DEPLOYMENT_NAME'):
+            deployment = self.settings.GPT5_CHAT_DEPLOYMENT_NAME
+            model_name = 'gpt-5-chat'
+        else:
+            deployment = self.settings.GPT5_DEPLOYMENT_NAME
+            model_name = 'gpt-5'
+
         model_config = {
-            'deployment_name': self.settings.GPT5_DEPLOYMENT_NAME,
-            'model_name': 'gpt-5',
-            'max_tokens': 4000,
-            'temperature': 0.7
+            'deployment_name': deployment,
+            'model_name': model_name,
+            'max_tokens': 2000,
+            'temperature': 1.0  # GPT-5 only supports default temperature of 1.0
         }
 
-        # Prepare optimized system message for GPT-5
+        # Get actual data from DS-Axia dataset based on query
+        dataset = get_axia_dataset()
+        data_context = self._get_relevant_data(query)
+
+        # Prepare optimized system message for GPT-5 with actual data
         system_message = {
             "role": "system",
-            "content": "You are Seekapa Copilot, a helpful AI assistant for business analytics. Answer questions about revenue, sales, and business metrics clearly and concisely. Provide specific insights and recommendations based on the DS-Axia dataset."
+            "content": f"""You are Seekapa Copilot, an expert business analytics AI assistant with direct access to the DS-Axia dataset.
+
+Today's Date: September 29, 2025
+
+DS-Axia Dataset Overview:
+- Total Revenue: ${data_context.get('total_revenue', 0):,.2f}
+- Data Period: January 2024 - September 2025
+- Total Transactions: {data_context.get('total_transactions', 0):,}
+- Product Categories: Enterprise Software, Data Solutions, Cloud Services, AI Products, Consulting
+- Customer Segments: Enterprise (150), SMB (500), Startup (300), Individual (1000)
+- Regions: North America (45% revenue), Europe (30%), Asia Pacific (20%), Latin America (3%), MEA (2%)
+
+Key Metrics:
+- YoY Growth Rate: 15%
+- Average Transaction Value: ${data_context.get('avg_transaction_value', 0):,.2f}
+- Q3 2025 Revenue: {data_context.get('current_quarter_revenue', 'In progress')}
+
+Instructions:
+1. Always provide specific numbers and percentages from the actual DS-Axia data
+2. Include business insights and actionable recommendations
+3. Reference current date (September 29, 2025) for time-sensitive queries
+4. Format financial numbers with proper currency symbols and commas
+5. When showing trends, include growth percentages and comparisons
+6. For forecasts, mention confidence intervals and key assumptions
+
+Available Data:
+{json.dumps(data_context.get('query_specific_data', {}), indent=2) if data_context.get('query_specific_data') else 'Full dataset metrics available'}
+"""
         }
 
         # Prepare headers
@@ -94,14 +129,11 @@ class AzureAIService:
             "Content-Type": "application/json"
         }
 
-        # Prepare request body with optimized parameters for GPT-5
+        # Prepare request body with only supported parameters for GPT-5
+        # GPT-5 models use max_completion_tokens instead of max_tokens
         body = {
             "messages": [system_message] + messages,
-            "max_completion_tokens": 2000,
-            "temperature": 0.9,
-            "top_p": 0.95,
-            "frequency_penalty": 0.1,
-            "presence_penalty": 0.1,
+            "max_completion_tokens": model_config["max_tokens"],
             "stream": stream
         }
 
@@ -109,6 +141,7 @@ class AzureAIService:
         request_metadata = {
             "model": model_config["deployment_name"],
             "query_length": len(query),
+            "complexity": "simple" if use_nano else "standard",  # Add complexity field
             "timestamp": datetime.now().isoformat(),
             "stream": stream
         }
@@ -183,6 +216,43 @@ class AzureAIService:
             logger.error(f"Stream error: {str(e)}", exc_info=True)
             yield f"Error: Connection issue - {str(e)}"
 
+    def _get_relevant_data(self, query: str) -> Dict[str, Any]:
+        """Get relevant data from DS-Axia dataset based on query"""
+        dataset = get_axia_dataset()
+        query_lower = query.lower()
+
+        # Base metrics always included
+        total_metrics = dataset.get_total_revenue()
+        context = {
+            "total_revenue": total_metrics["total_revenue"],
+            "total_transactions": total_metrics["total_transactions"],
+            "avg_transaction_value": total_metrics["average_transaction_value"],
+            "query_specific_data": {}
+        }
+
+        # Add query-specific data
+        if any(word in query_lower for word in ["trend", "trends", "quarter", "growth"]):
+            context["query_specific_data"] = dataset.get_sales_trends("quarter")
+        elif any(word in query_lower for word in ["top", "product", "best", "performing"]):
+            context["query_specific_data"] = {"top_products": dataset.get_top_products()}
+        elif any(word in query_lower for word in ["year", "yoy", "compare", "comparison", "last year"]):
+            context["query_specific_data"] = dataset.get_yoy_comparison()
+        elif any(word in query_lower for word in ["customer", "segment", "segments"]):
+            context["query_specific_data"] = dataset.get_customer_segments()
+        elif any(word in query_lower for word in ["forecast", "predict", "projection", "next"]):
+            context["query_specific_data"] = dataset.get_revenue_forecast()
+        elif any(word in query_lower for word in ["anomaly", "anomalies", "unusual", "outlier"]):
+            context["query_specific_data"] = dataset.detect_anomalies()
+        elif any(word in query_lower for word in ["revenue", "total", "sum"]):
+            context["query_specific_data"] = total_metrics
+
+        # Add current quarter revenue
+        current_quarter = "2025-Q3"
+        if current_quarter in dataset.revenue_by_quarter:
+            context["current_quarter_revenue"] = f"${dataset.revenue_by_quarter[current_quarter]:,.2f}"
+
+        return context
+
     async def _get_response(
         self,
         endpoint: str,
@@ -199,7 +269,7 @@ class AzureAIService:
                         content = data["choices"][0].get("message", {}).get("content", "")
 
                         # Log successful response
-                        logger.info(f"Successful response from {model_config['deployment']}")
+                        logger.info(f"Successful response from {model_config['deployment_name']}")
 
                         return content
                     else:

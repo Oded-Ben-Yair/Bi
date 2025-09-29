@@ -48,7 +48,7 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 30000
+        "timeout": 60000
       },
       {
         "outputDir": "/home/odedbe/Bi/seekapa-bi-agent/test-results",
@@ -62,7 +62,7 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 30000
+        "timeout": 60000
       },
       {
         "outputDir": "/home/odedbe/Bi/seekapa-bi-agent/test-results",
@@ -76,7 +76,7 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 30000
+        "timeout": 60000
       }
     ],
     "shard": null,
@@ -85,8 +85,8 @@
     "version": "1.55.1",
     "workers": 1,
     "webServer": {
-      "command": "echo \"Please start the application manually with ./start-production.sh\"",
-      "port": 3000,
+      "command": "echo \"Using existing dev server\"",
+      "port": 5173,
       "reuseExistingServer": true,
       "timeout": 5000
     }
@@ -99,8 +99,8 @@
     }
   ],
   "stats": {
-    "startTime": "2025-09-29T07:35:41.722Z",
-    "duration": 23.305000000000064,
+    "startTime": "2025-09-29T12:17:24.786Z",
+    "duration": 37.99000000000001,
     "expected": 0,
     "skipped": 0,
     "unexpected": 0,

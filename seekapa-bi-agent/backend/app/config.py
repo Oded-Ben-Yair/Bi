@@ -47,6 +47,9 @@ class Settings(BaseSettings):
 
     # GPT-5 Model Configuration
     GPT5_DEPLOYMENT_NAME: str = os.getenv("GPT5_DEPLOYMENT_NAME", "gpt-5")
+    GPT5_NANO_DEPLOYMENT_NAME: str = os.getenv("GPT5_NANO_DEPLOYMENT_NAME", "gpt-5-nano")
+    GPT5_CHAT_DEPLOYMENT_NAME: str = os.getenv("GPT5_CHAT_DEPLOYMENT_NAME", "gpt-5-chat")
+    GPT5_MINI_DEPLOYMENT_NAME: str = os.getenv("GPT5_MINI_DEPLOYMENT_NAME", "gpt-5-mini")
     GPT5_MODEL_VERSION: str = os.getenv("GPT5_MODEL_VERSION", "2025-08-07")
     AZURE_API_VERSION: str = os.getenv("AZURE_API_VERSION", "2025-04-01-preview")
 
@@ -195,9 +198,11 @@ Current context:
 - Query complexity: {complexity}
 - Timestamp: {timestamp}"""
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "allow"
+    }
 
 
 @lru_cache()
