@@ -1,0 +1,28 @@
+{
+  "name": "seekapa-bi-agent",
+  "version": "1.0.0",
+  "description": "![Version](https://img.shields.io/badge/version-4.0.0-blue) ![Dataset](https://img.shields.io/badge/dataset-DS--Axia-green) ![License](https://img.shields.io/badge/license-MIT-purple)",
+  "main": "test-websocket-debug.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:ceo": "playwright test --project=ceo-desktop-edge",
+    "test:mobile": "playwright test --project=ceo-mobile-edge",
+    "test:report": "playwright show-report",
+    "test:install": "playwright install msedge"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2"
+  }
+}
